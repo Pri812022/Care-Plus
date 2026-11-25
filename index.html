@@ -3,171 +3,239 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CarePlus | Healthcare Management System</title>
+  <title>CarePlus+ | Healthcare Management System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
   <!-- Toast Notification Container -->
-  <div id="toast-container" class="toast-container"></div>
+  <div id="toastContainer" class="toast-container"></div>
 
-  <!-- ==================== 1. ADMIN LOGIN VIEW ==================== -->
-  <section id="login-view" class="login-wrapper">
-    <div class="login-card">
-      <div class="login-header">
-        <div class="brand-logo">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-          </svg>
+  <!-- ==================== AUTHENTICATION SECTION ==================== -->
+  <section id="authSection" class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <div class="brand-icon">
+          <i class="fa-solid fa-heart-pulse"></i>
         </div>
-        <h1>CarePlus HMS</h1>
-        <p>Healthcare Administration Portal</p>
+        <h1>CarePlus<span>+</span></h1>
+        <p>Healthcare &amp; Clinic Management Portal</p>
       </div>
 
-      <form id="login-form" novalidate>
+      <!-- Auth Tabs -->
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" id="tabLogin">Admin Login</button>
+        <button type="button" class="auth-tab" id="tabRegister">Create Account</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" class="auth-form">
         <div class="form-group">
-          <label for="login-username">Username </label>
-          <input type="text" id="login-username" placeholder="Enter username or email id" required />
+          <label for="loginUsername">Username</label>
+          <div class="input-icon">
+            <i class="fa-solid fa-user-shield"></i>
+            <input type="text" id="loginUsername" placeholder="Enter username (default: admin)" required />
+          </div>
         </div>
+
         <div class="form-group">
-          <label for="login-password">Password</label>
-          <input type="password" id="login-password" placeholder="Enter password" required />
+          <label for="loginPassword">Password</label>
+          <div class="input-icon">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" id="loginPassword" placeholder="Enter password (default: admin123)" required />
+          </div>
         </div>
-        <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          <i class="fa-solid fa-right-to-bracket"></i> Sign In
+        </button>
+
+        <div class="demo-credentials">
+          <small><i class="fa-solid fa-circle-info"></i> Default Admin: <strong>admin</strong> / <strong>admin123</strong></small>
+        </div>
+      </form>
+
+      <!-- Register / Create New Account Form -->
+      <form id="registerForm" class="auth-form hidden">
+        <div class="form-group">
+          <label for="regFullName">Full Name</label>
+          <div class="input-icon">
+            <i class="fa-solid fa-id-card"></i>
+            <input type="text" id="regFullName" placeholder="e.g., Dr. Ananya Sharma" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="regRole">Role / Designation</label>
+          <div class="input-icon">
+            <i class="fa-solid fa-user-doctor"></i>
+            <select id="regRole" required>
+              <option value="Administrator">Healthcare Administrator</option>
+              <option value="Receptionist">Front Desk / Receptionist</option>
+              <option value="Senior Doctor">Senior Doctor</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="regUsername">Choose Username</label>
+          <div class="input-icon">
+            <i class="fa-solid fa-at"></i>
+            <input type="text" id="regUsername" placeholder="Min. 4 characters" minlength="4" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="regPassword">Create Password</label>
+          <div class="input-icon">
+            <i class="fa-solid fa-key"></i>
+            <input type="password" id="regPassword" placeholder="Min. 6 characters" minlength="6" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="regConfirmPassword">Confirm Password</label>
+          <div class="input-icon">
+            <i class="fa-solid fa-check-double"></i>
+            <input type="password" id="regConfirmPassword" placeholder="Re-enter password" minlength="6" required />
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-success btn-block">
+          <i class="fa-solid fa-user-plus"></i> Create New Account
+        </button>
       </form>
     </div>
   </section>
 
-  <!-- ==================== MAIN APPLICATION SHELL ==================== -->
-  <div id="app-shell" class="app-shell hidden">
-    
-    <!-- Mobile Overlay -->
-    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+  <!-- ==================== MAIN DASHBOARD APP ==================== -->
+  <div id="appSection" class="app-layout hidden">
+    <!-- Sidebar Overlay for Mobile -->
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
     <!-- Sidebar Navigation -->
     <aside id="sidebar" class="sidebar">
-      <div class="sidebar-brand">
-        <div class="brand-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M12 2v20M2 12h20"/>
-          </svg>
+      <div class="sidebar-header">
+        <div class="logo">
+          <i class="fa-solid fa-hospital"></i>
+          <span>Healthcare<strong>+</strong></span>
         </div>
-        <div>
-          <h2>CarePlus</h2>
-          <span>Health System</span>
-        </div>
+        <button id="closeSidebar" class="icon-btn mobile-only" aria-label="Close Menu">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
       </div>
 
       <nav class="sidebar-nav">
-        <button class="nav-item active" data-target="dashboard-section">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-          Dashboard
+        <button class="nav-item active" data-target="dashboardView">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Dashboard</span>
         </button>
-        <button class="nav-item" data-target="patients-section">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          Patients
+        <button class="nav-item" data-target="patientsView">
+          <i class="fa-solid fa-bed-pulse"></i>
+          <span>Patients</span>
         </button>
-        <button class="nav-item" data-target="doctors-section">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></svg>
-          Doctors
+        <button class="nav-item" data-target="doctorsView">
+          <i class="fa-solid fa-user-doctor"></i>
+          <span>Doctors</span>
         </button>
-        <button class="nav-item" data-target="appointments-section">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          Appointments
+        <button class="nav-item" data-target="appointmentsView">
+          <i class="fa-solid fa-calendar-check"></i>
+          <span>Appointments</span>
+        </button>
+        <button class="nav-item" data-target="timingView">
+          <i class="fa-solid fa-clock"></i>
+          <span>Hospital Timing</span>
         </button>
       </nav>
 
       <div class="sidebar-footer">
-        <button id="logout-btn" class="btn btn-danger-outline btn-block">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          Logout
+        <div class="user-profile">
+          <div class="avatar"><i class="fa-solid fa-user-tie"></i></div>
+          <div class="user-meta">
+            <strong id="currentUserName">Admin</strong>
+            <small id="currentUserRole">Administrator</small>
+          </div>
+        </div>
+        <button id="logoutBtn" class="btn btn-danger btn-block">
+          <i class="fa-solid fa-right-from-bracket"></i> Logout
         </button>
       </div>
     </aside>
 
-    <!-- Main Workspace -->
-    <div class="main-content">
-      
-      <!-- Top Header with Hospital Timing & Live Clock -->
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+      <!-- Top Header -->
       <header class="topbar">
         <div class="topbar-left">
-          <button id="menu-toggle" class="menu-toggle" aria-label="Toggle Menu">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <button id="openSidebar" class="icon-btn mobile-only" aria-label="Open Menu">
+            <i class="fa-solid fa-bars"></i>
           </button>
-          <h2 id="page-title">Admin Dashboard</h2>
+          <h2 id="pageTitle">Dashboard Overview</h2>
         </div>
 
         <div class="topbar-right">
-          <div class="clock-widget">
-            <span id="live-date" class="live-date">--</span>
-            <span id="live-clock" class="live-clock">00:00:00</span>
+          <div class="status-pill" id="headerHospitalStatus">
+            <span class="dot"></span>
+            <span id="headerStatusText">Checking...</span>
           </div>
-          <div id="hospital-status-badge" class="status-badge status-open">
-            <span class="pulse-dot"></span>
-            <span id="hospital-status-text">OPEN</span>
+          <div class="clock-box">
+            <div id="liveTime" class="live-time">00:00:00 AM</div>
+            <div id="liveDate" class="live-date">Loading date...</div>
           </div>
         </div>
       </header>
 
-      <!-- Content Area -->
+      <!-- Main Views Container -->
       <main class="content-area">
-
-        <!-- ==================== 2. ADMIN DASHBOARD ==================== -->
-        <section id="dashboard-section" class="view-section active">
-          
-          <!-- Stat Cards -->
+        <!-- 1. DASHBOARD VIEW -->
+        <section id="dashboardView" class="view-section active">
           <div class="stats-grid">
-            <div class="stat-card card-blue">
+            <div class="stat-card blue">
               <div class="stat-info">
-                <span class="stat-label">Total Patients</span>
-                <h3 id="stat-patients" class="stat-value">0</h3>
-                <span class="stat-sub">Registered records</span>
+                <span>Total Patients</span>
+                <h3 id="statPatients">0</h3>
+                <small>Registered in system</small>
               </div>
-              <div class="stat-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-              </div>
+              <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
             </div>
 
-            <div class="stat-card card-green">
+            <div class="stat-card green">
               <div class="stat-info">
-                <span class="stat-label">Total Doctors</span>
-                <h3 id="stat-doctors" class="stat-value">0</h3>
-                <span id="stat-available-doctors" class="stat-sub">0 Available now</span>
+                <span>Total Doctors</span>
+                <h3 id="statDoctors">0</h3>
+                <small id="statAvailableDoctors">0 Available today</small>
               </div>
-              <div class="stat-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-              </div>
+              <div class="stat-icon"><i class="fa-solid fa-stethoscope"></i></div>
             </div>
 
-            <div class="stat-card card-teal">
+            <div class="stat-card teal">
               <div class="stat-info">
-                <span class="stat-label">Appointments</span>
-                <h3 id="stat-appointments" class="stat-value">0</h3>
-                <span id="stat-scheduled-appts" class="stat-sub">0 Scheduled</span>
+                <span>Appointments</span>
+                <h3 id="statAppointments">0</h3>
+                <small id="statScheduledAppts">0 Scheduled</small>
               </div>
-              <div class="stat-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              </div>
+              <div class="stat-icon"><i class="fa-solid fa-calendar-day"></i></div>
             </div>
 
-            <div class="stat-card card-indigo">
+            <div class="stat-card emerald">
               <div class="stat-info">
-                <span class="stat-label">OPD Hours</span>
-                <h3 class="stat-value" style="font-size: 1.25rem;">08:00 AM - 08:00 PM</h3>
-                <span id="dashboard-timing-note" class="stat-sub">Emergency 24/7 Active</span>
+                <span>Hospital Status</span>
+                <h3 id="statHospitalStatus">OPEN</h3>
+                <small id="statHospitalHours">08:00 AM – 09:00 PM</small>
               </div>
-              <div class="stat-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              </div>
+              <div class="stat-icon"><i class="fa-solid fa-door-open"></i></div>
             </div>
           </div>
 
-          <!-- Dashboard Overview Grid -->
           <div class="dashboard-grid">
-            <div class="panel">
-              <div class="panel-header">
-                <h3>Recent Appointments</h3>
-                <button class="btn btn-sm btn-outline" onclick="switchTab('appointments-section')">View All</button>
+            <!-- Recent Appointments -->
+            <div class="card">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-clock-rotate-left"></i> Upcoming &amp; Recent Appointments</h3>
+                <button class="btn btn-sm btn-outline" onclick="switchView('appointmentsView')">View All</button>
               </div>
               <div class="table-responsive">
                 <table class="data-table">
@@ -175,291 +243,358 @@
                     <tr>
                       <th>Patient</th>
                       <th>Doctor</th>
-                      <th>Date & Time</th>
+                      <th>Date &amp; Time</th>
                       <th>Status</th>
                     </tr>
                   </thead>
-                  <tbody id="recent-appointments-body"></tbody>
+                  <tbody id="recentAppointmentsBody"></tbody>
                 </table>
               </div>
             </div>
 
-            <div class="panel">
-              <div class="panel-header">
-                <h3>Hospital Timing & Status</h3>
+            <!-- Doctor Availability Snapshot -->
+            <div class="card">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-user-doctor"></i> Doctors On Duty</h3>
+                <button class="btn btn-sm btn-outline" onclick="switchView('doctorsView')">Manage</button>
               </div>
-              <div class="timing-details">
-                <div class="timing-row">
-                  <span>General OPD Opening:</span>
-                  <strong>08:00 AM</strong>
+              <div id="dashboardDoctorsList" class="doctor-mini-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. PATIENT MANAGEMENT VIEW -->
+        <section id="patientsView" class="view-section">
+          <div class="split-layout">
+            <!-- Patient Form -->
+            <div class="card form-card">
+              <div class="card-header">
+                <h3 id="patientFormTitle"><i class="fa-solid fa-user-plus"></i> Register New Patient</h3>
+              </div>
+              <form id="patientForm">
+                <input type="hidden" id="patientId" />
+                <div class="form-group">
+                  <label for="patientName">Full Name *</label>
+                  <input type="text" id="patientName" placeholder="e.g., Rahul Verma" required />
                 </div>
-                <div class="timing-row">
-                  <span>General OPD Closing:</span>
-                  <strong>08:00 PM</strong>
-                </div>
-                <div class="timing-row">
-                  <span>Current System Status:</span>
-                  <strong id="panel-status-text">Open for OPD</strong>
-                </div>
-                <div class="timing-row">
-                  <span>Emergency Ward:</span>
-                  <strong class="text-green">Open 24 Hours</strong>
-                </div>
-                <div class="quick-actions">
-                  <h4>Quick Actions</h4>
-                  <div class="action-btn-group">
-                    <button class="btn btn-primary btn-sm" onclick="switchTab('patients-section')">+ Register Patient</button>
-                    <button class="btn btn-secondary btn-sm" onclick="switchTab('appointments-section')">+ Book Appointment</button>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="patientAge">Age *</label>
+                    <input type="number" id="patientAge" min="0" max="120" placeholder="Years" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="patientGender">Gender *</label>
+                    <select id="patientGender" required>
+                      <option value="">Select</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
                   </div>
                 </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="patientBlood">Blood Group *</label>
+                    <select id="patientBlood" required>
+                      <option value="">Select</option>
+                      <option value="A+">A+</option>
+                      <option value="A-">A-</option>
+                      <option value="B+">B+</option>
+                      <option value="B-">B-</option>
+                      <option value="O+">O+</option>
+                      <option value="O-">O-</option>
+                      <option value="AB+">AB+</option>
+                      <option value="AB-">AB-</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="patientPhone">Phone Number *</label>
+                    <input type="tel" id="patientPhone" placeholder="10-digit mobile" pattern="[0-9]{10}" required />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="patientDisease">Symptoms / Condition *</label>
+                  <input type="text" id="patientDisease" placeholder="e.g., Fever, Routine Checkup" required />
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary" id="savePatientBtn">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Patient
+                  </button>
+                  <button type="button" class="btn btn-secondary hidden" id="cancelPatientEdit">Cancel</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Patient Directory -->
+            <div class="card table-card">
+              <div class="card-header wrap-header">
+                <h3><i class="fa-solid fa-hospital-user"></i> Patient Records</h3>
+                <div class="filter-bar">
+                  <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="patientSearch" placeholder="Search name, phone, condition..." />
+                  </div>
+                  <select id="patientGenderFilter">
+                    <option value="All">All Genders</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th>Age/Gender</th>
+                      <th>Blood</th>
+                      <th>Phone</th>
+                      <th>Condition</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="patientsTableBody"></tbody>
+                </table>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- ==================== 3. PATIENT MANAGEMENT ==================== -->
-        <section id="patients-section" class="view-section">
-          <div class="panel">
-            <div class="panel-header">
-              <h3 id="patient-form-title">Register New Patient</h3>
-              <button type="button" id="cancel-patient-edit" class="btn btn-sm btn-outline hidden">Cancel Edit</button>
+        <!-- 3. DOCTOR MANAGEMENT VIEW -->
+        <section id="doctorsView" class="view-section">
+          <div class="split-layout">
+            <!-- Doctor Form -->
+            <div class="card form-card">
+              <div class="card-header">
+                <h3 id="doctorFormTitle"><i class="fa-solid fa-user-doctor"></i> Add New Doctor</h3>
+              </div>
+              <form id="doctorForm">
+                <input type="hidden" id="doctorId" />
+                <div class="form-group">
+                  <label for="doctorName">Doctor Name *</label>
+                  <input type="text" id="doctorName" placeholder="e.g., Dr. Vikram Mehta" required />
+                </div>
+                <div class="form-group">
+                  <label for="doctorSpec">Specialization *</label>
+                  <select id="doctorSpec" required>
+                    <option value="">Select Specialization</option>
+                    <option value="General Physician">General Physician</option>
+                    <option value="Cardiologist">Cardiologist</option>
+                    <option value="Neurologist">Neurologist</option>
+                    <option value="Orthopedic">Orthopedic</option>
+                    <option value="Pediatrician">Pediatrician</option>
+                    <option value="Dermatologist">Dermatologist</option>
+                    <option value="ENT Specialist">ENT Specialist</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="doctorPhone">Contact Number *</label>
+                  <input type="tel" id="doctorPhone" placeholder="10-digit mobile" pattern="[0-9]{10}" required />
+                </div>
+                <div class="form-group">
+                  <label for="doctorAvailability">Availability Status *</label>
+                  <select id="doctorAvailability" required>
+                    <option value="Available">Available</option>
+                    <option value="On Leave">On Leave</option>
+                    <option value="In Surgery">In Surgery</option>
+                  </select>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary" id="saveDoctorBtn">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Doctor
+                  </button>
+                  <button type="button" class="btn btn-secondary hidden" id="cancelDoctorEdit">Cancel</button>
+                </div>
+              </form>
             </div>
-            <form id="patient-form" class="grid-form">
-              <input type="hidden" id="patient-id" />
-              <div class="form-group">
-                <label for="patient-name">Full Name *</label>
-                <input type="text" id="patient-name" placeholder="e.g. Aarav Sharma" required />
-              </div>
-              <div class="form-group">
-                <label for="patient-age">Age *</label>
-                <input type="number" id="patient-age" min="0" max="130" placeholder="e.g. 34" required />
-              </div>
-              <div class="form-group">
-                <label for="patient-gender">Gender *</label>
-                <select id="patient-gender" required>
-                  <option value="">Select Gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="patient-blood">Blood Group *</label>
-                <select id="patient-blood" required>
-                  <option value="">Select Group</option>
-                  <option value="A+">A+</option><option value="A-">A-</option>
-                  <option value="B+">B+</option><option value="B-">B-</option>
-                  <option value="O+">O+</option><option value="O-">O-</option>
-                  <option value="AB+">AB+</option><option value="AB-">AB-</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="patient-phone">Phone Number *</label>
-                <input type="tel" id="patient-phone" placeholder="e.g. 9876543210" required />
-              </div>
-              <div class="form-group">
-                <label for="patient-disease">Diagnosis / Symptoms *</label>
-                <input type="text" id="patient-disease" placeholder="e.g. Viral Fever" required />
-              </div>
-              <div class="form-actions full-width">
-                <button type="submit" id="patient-submit-btn" class="btn btn-primary">Save Patient Record</button>
-              </div>
-            </form>
-          </div>
 
-          <div class="panel">
-            <div class="panel-header wrap-header">
-              <h3>Patient Records</h3>
-              <div class="filter-bar">
-                <input type="text" id="patient-search" class="search-input" placeholder="Search by name, ID, or condition..." />
-                <select id="patient-gender-filter" class="filter-select">
-                  <option value="All">All Genders</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
+            <!-- Doctor Directory -->
+            <div class="card table-card">
+              <div class="card-header wrap-header">
+                <h3><i class="fa-solid fa-user-md"></i> Medical Specialists</h3>
+                <div class="filter-bar">
+                  <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="doctorSearch" placeholder="Search doctor or specialty..." />
+                  </div>
+                  <select id="doctorStatusFilter">
+                    <option value="All">All Status</option>
+                    <option value="Available">Available</option>
+                    <option value="On Leave">On Leave</option>
+                    <option value="In Surgery">In Surgery</option>
+                  </select>
+                </div>
               </div>
-            </div>
-            <div class="table-responsive">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Patient Name</th>
-                    <th>Age / Gender</th>
-                    <th>Blood</th>
-                    <th>Phone</th>
-                    <th>Condition</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="patients-table-body"></tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <!-- ==================== 4. DOCTOR MANAGEMENT ==================== -->
-        <section id="doctors-section" class="view-section">
-          <div class="panel">
-            <div class="panel-header">
-              <h3 id="doctor-form-title">Add New Doctor</h3>
-              <button type="button" id="cancel-doctor-edit" class="btn btn-sm btn-outline hidden">Cancel Edit</button>
-            </div>
-            <form id="doctor-form" class="grid-form">
-              <input type="hidden" id="doctor-id" />
-              <div class="form-group">
-                <label for="doctor-name">Doctor Name *</label>
-                <input type="text" id="doctor-name" placeholder="e.g. Dr. Priya Verma" required />
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Doctor Name</th>
+                      <th>Specialization</th>
+                      <th>Phone</th>
+                      <th>Availability</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="doctorsTableBody"></tbody>
+                </table>
               </div>
-              <div class="form-group">
-                <label for="doctor-specialization">Specialization *</label>
-                <select id="doctor-specialization" required>
-                  <option value="">Select Specialization</option>
-                  <option value="General Physician">General Physician</option>
-                  <option value="Cardiologist">Cardiologist</option>
-                  <option value="Neurologist">Neurologist</option>
-                  <option value="Orthopedic">Orthopedic</option>
-                  <option value="Pediatrician">Pediatrician</option>
-                  <option value="Dermatologist">Dermatologist</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="doctor-phone">Contact Number *</label>
-                <input type="tel" id="doctor-phone" placeholder="e.g. 9123456780" required />
-              </div>
-              <div class="form-group">
-                <label for="doctor-availability">Availability Status *</label>
-                <select id="doctor-availability" required>
-                  <option value="Available">Available</option>
-                  <option value="On Leave">On Leave</option>
-                  <option value="In Surgery">In Surgery</option>
-                </select>
-              </div>
-              <div class="form-actions full-width">
-                <button type="submit" id="doctor-submit-btn" class="btn btn-primary">Save Doctor</button>
-              </div>
-            </form>
-          </div>
-
-          <div class="panel">
-            <div class="panel-header wrap-header">
-              <h3>Medical Staff Directory</h3>
-              <div class="filter-bar">
-                <input type="text" id="doctor-search" class="search-input" placeholder="Search doctor or specialization..." />
-                <select id="doctor-status-filter" class="filter-select">
-                  <option value="All">All Statuses</option>
-                  <option value="Available">Available</option>
-                  <option value="On Leave">On Leave</option>
-                  <option value="In Surgery">In Surgery</option>
-                </select>
-              </div>
-            </div>
-            <div class="table-responsive">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Doctor Name</th>
-                    <th>Specialization</th>
-                    <th>Contact</th>
-                    <th>Availability</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="doctors-table-body"></tbody>
-              </table>
             </div>
           </div>
         </section>
 
-        <!-- ==================== 5. APPOINTMENT MANAGEMENT ==================== -->
-        <section id="appointments-section" class="view-section">
-          <div class="panel">
-            <div class="panel-header">
-              <h3 id="appointment-form-title">Book New Appointment</h3>
-              <button type="button" id="cancel-appointment-edit" class="btn btn-sm btn-outline hidden">Cancel Edit</button>
+        <!-- 4. APPOINTMENT MANAGEMENT VIEW -->
+        <section id="appointmentsView" class="view-section">
+          <div class="split-layout">
+            <!-- Appointment Form -->
+            <div class="card form-card">
+              <div class="card-header">
+                <h3 id="appointmentFormTitle"><i class="fa-solid fa-calendar-plus"></i> Book Appointment</h3>
+              </div>
+              <form id="appointmentForm">
+                <input type="hidden" id="appointmentId" />
+                <div class="form-group">
+                  <label for="apptPatient">Select Patient *</label>
+                  <select id="apptPatient" required></select>
+                </div>
+                <div class="form-group">
+                  <label for="apptDoctor">Select Doctor *</label>
+                  <select id="apptDoctor" required></select>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="apptDate">Date *</label>
+                    <input type="date" id="apptDate" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="apptTime">Time *</label>
+                    <input type="time" id="apptTime" required />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="apptStatus">Appointment Status *</label>
+                  <select id="apptStatus" required>
+                    <option value="Scheduled">Scheduled</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="apptNotes">Notes / Reason</label>
+                  <input type="text" id="apptNotes" placeholder="Optional visit remarks" />
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary" id="saveApptBtn">
+                    <i class="fa-solid fa-calendar-check"></i> Confirm Booking
+                  </button>
+                  <button type="button" class="btn btn-secondary hidden" id="cancelApptEdit">Cancel</button>
+                </div>
+              </form>
             </div>
-            <form id="appointment-form" class="grid-form">
-              <input type="hidden" id="appointment-id" />
-              <div class="form-group">
-                <label for="appt-patient">Select Patient *</label>
-                <select id="appt-patient" required></select>
-              </div>
-              <div class="form-group">
-                <label for="appt-doctor">Select Doctor *</label>
-                <select id="appt-doctor" required></select>
-              </div>
-              <div class="form-group">
-                <label for="appt-date">Appointment Date *</label>
-                <input type="date" id="appt-date" required />
-              </div>
-              <div class="form-group">
-                <label for="appt-time">Appointment Time *</label>
-                <input type="time" id="appt-time" required />
-              </div>
-              <div class="form-group">
-                <label for="appt-status">Status *</label>
-                <select id="appt-status" required>
-                  <option value="Scheduled">Scheduled</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Cancelled">Cancelled</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="appt-notes">Reason / Notes</label>
-                <input type="text" id="appt-notes" placeholder="e.g. Routine Checkup" />
-              </div>
-              <div class="form-actions full-width">
-                <button type="submit" id="appointment-submit-btn" class="btn btn-primary">Confirm Appointment</button>
-              </div>
-            </form>
-          </div>
 
-          <div class="panel">
-            <div class="panel-header wrap-header">
-              <h3>Scheduled Appointments</h3>
-              <div class="filter-bar">
-                <input type="text" id="appointment-search" class="search-input" placeholder="Search patient or doctor..." />
-                <select id="appointment-status-filter" class="filter-select">
-                  <option value="All">All Statuses</option>
-                  <option value="Scheduled">Scheduled</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Cancelled">Cancelled</option>
-                </select>
+            <!-- Appointments Table -->
+            <div class="card table-card">
+              <div class="card-header wrap-header">
+                <h3><i class="fa-solid fa-list-check"></i> Appointment Schedule</h3>
+                <div class="filter-bar">
+                  <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="apptSearch" placeholder="Search patient or doctor..." />
+                  </div>
+                  <select id="apptStatusFilter">
+                    <option value="All">All Status</option>
+                    <option value="Scheduled">Scheduled</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+                </div>
               </div>
-            </div>
-            <div class="table-responsive">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Appt ID</th>
-                    <th>Patient</th>
-                    <th>Doctor</th>
-                    <th>Date & Time</th>
-                    <th>Notes</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="appointments-table-body"></tbody>
-              </table>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Patient</th>
+                      <th>Doctor</th>
+                      <th>Date</th>
+                      <th>Time</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="appointmentsTableBody"></tbody>
+                </table>
+              </div>
             </div>
           </div>
         </section>
 
+        <!-- 5. HOSPITAL TIMING VIEW -->
+        <section id="timingView" class="view-section">
+          <div class="timing-grid">
+            <div class="card timing-hero">
+              <div class="timing-badge" id="timingBigBadge">OPEN NOW</div>
+              <h2 id="timingBigClock">00:00:00 AM</h2>
+              <p id="timingBigDate">Wednesday, November 25, 2026</p>
+              <div class="schedule-summary">
+                <div class="time-slot">
+                  <span>Opening Time</span>
+                  <strong id="displayOpenTime">08:00 AM</strong>
+                </div>
+                <div class="divider"></div>
+                <div class="time-slot">
+                  <span>Closing Time</span>
+                  <strong id="displayCloseTime">09:00 PM</strong>
+                </div>
+              </div>
+              <small class="emergency-note">
+                <i class="fa-solid fa-truck-medical"></i> 24/7 Emergency &amp; Trauma Ward remains operational at all hours.
+              </small>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3><i class="fa-solid fa-sliders"></i> Configure OPD Operating Hours</h3>
+              </div>
+              <form id="timingForm">
+                <div class="form-group">
+                  <label for="openTimeInput">Hospital Opening Time</label>
+                  <input type="time" id="openTimeInput" value="08:00" required />
+                </div>
+                <div class="form-group">
+                  <label for="closeTimeInput">Hospital Closing Time</label>
+                  <input type="time" id="closeTimeInput" value="21:00" required />
+                </div>
+                <button type="submit" class="btn btn-success">
+                  <i class="fa-solid fa-clock"></i> Update Operating Hours
+                </button>
+              </form>
+
+              <div class="department-hours">
+                <h4>Department Schedule Overview</h4>
+                <ul>
+                  <li><span>Outpatient Department (OPD)</span> <strong>08:00 AM – 09:00 PM</strong></li>
+                  <li><span>Diagnostics &amp; Pathology Lab</span> <strong>07:00 AM – 10:00 PM</strong></li>
+                  <li><span>Pharmacy &amp; Dispensary</span> <strong>24 Hours Open</strong></li>
+                  <li><span>Visiting Hours (General Ward)</span> <strong>04:00 PM – 07:00 PM</strong></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
   </div>
 
   <!-- Patient Details Modal -->
-  <div id="patient-modal" class="modal hidden">
+  <div id="patientModal" class="modal hidden">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Patient Clinical Summary</h3>
-        <button id="close-modal-btn" class="close-btn">&times;</button>
+        <h3><i class="fa-solid fa-file-medical"></i> Patient Medical Summary</h3>
+        <button class="icon-btn" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div id="modal-body" class="modal-body"></div>
+      <div id="patientModalBody" class="modal-body"></div>
     </div>
   </div>
 

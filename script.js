@@ -1,589 +1,698 @@
-/* ==================== STATE & STORAGE INITIALIZATION ==================== */
+/* ==================== INITIALIZATION & STORAGE KEYS ==================== */
 const STORAGE_KEYS = {
-  AUTH: 'medicore_auth',
-  PATIENTS: 'medicore_patients',
-  DOCTORS: 'medicore_doctors',
-  APPOINTMENTS: 'medicore_appointments'
+  USERS: 'hms_users',
+  SESSION: 'hms_active_session',
+  PATIENTS: 'hms_patients',
+  DOCTORS: 'hms_doctors',
+  APPOINTMENTS: 'hms_appointments',
+  TIMING: 'hms_timing'
 };
 
-// Preload realistic sample records on first visit for presentation readiness
-const DEFAULT_PATIENTS = [
-  { id: 'P-1001', name: 'Aarav Sharma', age: 34, gender: 'Male', blood: 'B+', phone: '9876543210', disease: 'Hypertension Checkup' },
-  { id: 'P-1002', name: 'Ananya Verma', age: 27, gender: 'Female', blood: 'O+', phone: '9823456712', disease: 'Migraine & Fatigue' },
-  { id: 'P-1003', name: 'Rohan Kulkarni', age: 45, gender: 'Male', blood: 'A+', phone: '9765432109', disease: 'Knee Joint Pain' }
-];
-
-const DEFAULT_DOCTORS = [
-  { id: 'D-201', name: 'Dr. Vikramaditya Nair', specialization: 'Cardiologist', phone: '9112233445', availability: 'Available' },
-  { id: 'D-202', name: 'Dr. Meera Deshmukh', specialization: 'Neurologist', phone: '9223344556', availability: 'Available' },
-  { id: 'D-203', name: 'Dr. Kabir Malhotra', specialization: 'Orthopedic', phone: '9334455667', availability: 'In Surgery' }
-];
-
-const DEFAULT_APPOINTMENTS = [
-  { id: 'APT-301', patientId: 'P-1001', doctorId: 'D-201', date: new Date().toISOString().split('T')[0], time: '10:30', status: 'Scheduled', notes: 'Routine ECG & BP review' },
-  { id: 'APT-302', patientId: 'P-1002', doctorId: 'D-202', date: new Date().toISOString().split('T')[0], time: '14:15', status: 'Completed', notes: 'Follow-up consultation' }
-];
-
-function getData(key, fallback) {
-  const existing = localStorage.getItem(key);
-  if (!existing) {
-    localStorage.setItem(key, JSON.stringify(fallback));
-    return [...fallback];
+// Seed default data if localStorage is empty
+function initializeDefaultData() {
+  if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
+    const defaultUsers = [
+      {
+        fullName: 'System Administrator',
+        role: 'Hospital Administrator',
+        username: 'admin',
+        password: 'admin123'
+      }
+    ];
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(defaultUsers));
   }
-  return JSON.parse(existing);
+
+  if (!localStorage.getItem(STORAGE_KEYS.PATIENTS)) {
+    const samplePatients = [
+      { id: 'PT-1001', name: 'Aarav Patel', age: 34, gender: 'Male', blood: 'O+', phone: '9876543210', disease: 'Viral Fever & Fatigue' },
+      { id: 'PT-1002', name: 'Priya Nair', age: 28, gender: 'Female', blood: 'A+', phone: '9823456781', disease: 'Migraine Consultation' },
+      { id: 'PT-1003', name: 'Rohan Deshmukh', age: 52, gender: 'Male', blood: 'B+', phone: '9765432109', disease: 'Hypertension Checkup' }
+    ];
+    localStorage.setItem(STORAGE_KEYS.PATIENTS, JSON.stringify(samplePatients));
+  }
+
+  if (!localStorage.getItem(STORAGE_KEYS.DOCTORS)) {
+    const sampleDoctors = [
+      { id: 'DR-101', name: 'Dr. Siddharth Verma', specialization: 'Cardiologist', phone: '9811122233', availability: 'Available' },
+      { id: 'DR-102', name: 'Dr. Meera Kulkarni', specialization: 'General Physician', phone: '9822233344', availability: 'Available' },
+      { id: 'DR-103', name: 'Dr. Kabir Malhotra', specialization: 'Orthopedic', phone: '9833344455', availability: 'In Surgery' }
+    ];
+    localStorage.setItem(STORAGE_KEYS.DOCTORS, JSON.stringify(sampleDoctors));
+  }
+
+  if (!localStorage.getItem(STORAGE_KEYS.APPOINTMENTS)) {
+    const today = new Date().toISOString().split('T')[0];
+    const sampleAppointments = [
+      { id: 'AP-501', patientId: 'PT-1001', patientName: 'Aarav Patel', doctorId: 'DR-102', doctorName: 'Dr. Meera Kulkarni', date: today, time: '10:30', status: 'Scheduled', notes: 'Routine follow-up' },
+      { id: 'AP-502', patientId: 'PT-1003', patientName: 'Rohan Deshmukh', doctorId: 'DR-101', doctorName: 'Dr. Siddharth Verma', date: today, time: '14:15', status: 'Scheduled', notes: 'ECG & BP review' }
+    ];
+    localStorage.setItem(STORAGE_KEYS.APPOINTMENTS, JSON.stringify(sampleAppointments));
+  }
+
+  if (!localStorage.getItem(STORAGE_KEYS.TIMING)) {
+    localStorage.setItem(STORAGE_KEYS.TIMING, JSON.stringify({ openTime: '08:00', closeTime: '21:00' }));
+  }
 }
 
-function saveData(key, data) {
-  localStorage.setItem(key, JSON.stringify(data));
-}
+/* ==================== HELPER FUNCTIONS ==================== */
+const getData = (key) => JSON.parse(localStorage.getItem(key)) || [];
+const setData = (key, data) => localStorage.setItem(key, JSON.stringify(data));
 
-let patients = getData(STORAGE_KEYS.PATIENTS, DEFAULT_PATIENTS);
-let doctors = getData(STORAGE_KEYS.DOCTORS, DEFAULT_DOCTORS);
-let appointments = getData(STORAGE_KEYS.APPOINTMENTS, DEFAULT_APPOINTMENTS);
-
-/* ==================== TOAST NOTIFICATIONS ==================== */
 function showToast(message, type = 'success') {
-  const container = document.getElementById('toast-container');
+  const container = document.getElementById('toastContainer');
   const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
-  toast.textContent = message;
+  toast.className = `toast ${type}`;
+  const icon = type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation';
+  toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
   container.appendChild(toast);
-
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
+  setTimeout(() => toast.remove(), 3500);
 }
 
-/* ==================== 1. AUTHENTICATION (LOGIN / LOGOUT) ==================== */
-const loginView = document.getElementById('login-view');
-const appShell = document.getElementById('app-shell');
-const loginForm = document.getElementById('login-form');
+function formatTime12Hour(time24) {
+  if (!time24) return '';
+  const [hourStr, minute] = time24.split(':');
+  let hour = parseInt(hourStr, 10);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  hour = hour % 12 || 12;
+  return `${String(hour).padStart(2, '0')}:${minute} ${ampm}`;
+}
 
-function checkAuth() {
-  const isLoggedIn = localStorage.getItem(STORAGE_KEYS.AUTH) === 'true';
-  if (isLoggedIn) {
-    loginView.classList.add('hidden');
-    appShell.classList.remove('hidden');
-    refreshAllViews();
-  } else {
-    loginView.classList.remove('hidden');
-    appShell.classList.add('hidden');
+/* ==================== AUTHENTICATION & SIGN UP ==================== */
+const authSection = document.getElementById('authSection');
+const appSection = document.getElementById('appSection');
+const loginForm = document.getElementById('loginForm');
+const registerForm = document.getElementById('registerForm');
+const tabLogin = document.getElementById('tabLogin');
+const tabRegister = document.getElementById('tabRegister');
+
+// Toggle between Login and Create Account tabs
+tabLogin.addEventListener('click', () => {
+  tabLogin.classList.add('active');
+  tabRegister.classList.remove('active');
+  loginForm.classList.remove('hidden');
+  registerForm.classList.add('hidden');
+});
+
+tabRegister.addEventListener('click', () => {
+  tabRegister.classList.add('active');
+  tabLogin.classList.remove('active');
+  registerForm.classList.remove('hidden');
+  loginForm.classList.add('hidden');
+});
+
+// Handle New Account Creation
+registerForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const fullName = document.getElementById('regFullName').value.trim();
+  const role = document.getElementById('regRole').value;
+  const username = document.getElementById('regUsername').value.trim().toLowerCase();
+  const password = document.getElementById('regPassword').value;
+  const confirmPassword = document.getElementById('regConfirmPassword').value;
+
+  if (password !== confirmPassword) {
+    showToast('Passwords do not match!', 'error');
+    return;
   }
-}
 
+  const users = getData(STORAGE_KEYS.USERS);
+  if (users.some((u) => u.username.toLowerCase() === username)) {
+    showToast('Username already exists. Choose another.', 'error');
+    return;
+  }
+
+  const newUser = { fullName, role, username, password };
+  users.push(newUser);
+  setData(STORAGE_KEYS.USERS, users);
+
+  registerForm.reset();
+  showToast('Account created successfully! Please sign in.', 'success');
+  tabLogin.click();
+  document.getElementById('loginUsername').value = username;
+});
+
+// Handle Admin Login
 loginForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  const user = document.getElementById('login-username').value.trim();
-  const pass = document.getElementById('login-password').value.trim();
+  const username = document.getElementById('loginUsername').value.trim().toLowerCase();
+  const password = document.getElementById('loginPassword').value;
 
-  if (!user || !pass) {
-    showToast('Please enter both username and password.', 'error');
+  const users = getData(STORAGE_KEYS.USERS);
+  const matchedUser = users.find(
+    (u) => u.username.toLowerCase() === username && u.password === password
+  );
+
+  if (!matchedUser) {
+    showToast('Invalid username or password!', 'error');
     return;
   }
 
-  if (user === 'admin' && pass === 'admin123') {
-    localStorage.setItem(STORAGE_KEYS.AUTH, 'true');
-    showToast('Login successful! Welcome back, Admin.', 'success');
-    loginForm.reset();
-    checkAuth();
-  } else {
-    showToast('Invalid credentials! Try admin / admin123', 'error');
-  }
+  localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(matchedUser));
+  showToast(`Welcome back, ${matchedUser.fullName}!`, 'success');
+  loadApp(matchedUser);
 });
 
-document.getElementById('logout-btn').addEventListener('click', () => {
-  localStorage.removeItem(STORAGE_KEYS.AUTH);
-  showToast('Logged out successfully.', 'info');
-  checkAuth();
+// Handle Logout
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  localStorage.removeItem(STORAGE_KEYS.SESSION);
+  appSection.classList.add('hidden');
+  authSection.classList.remove('hidden');
+  loginForm.reset();
+  showToast('Logged out securely.', 'success');
 });
 
-/* ==================== NAVIGATION & MOBILE MENU ==================== */
+function loadApp(user) {
+  authSection.classList.add('hidden');
+  appSection.classList.remove('hidden');
+  document.getElementById('currentUserName').textContent = user.fullName;
+  document.getElementById('currentUserRole').textContent = user.role;
+  refreshAllViews();
+}
+
+/* ==================== NAVIGATION & RESPONSIVE SIDEBAR ==================== */
 const navItems = document.querySelectorAll('.nav-item');
-const sections = document.querySelectorAll('.view-section');
-const pageTitle = document.getElementById('page-title');
+const viewSections = document.querySelectorAll('.view-section');
+const pageTitle = document.getElementById('pageTitle');
 const sidebar = document.getElementById('sidebar');
-const sidebarOverlay = document.getElementById('sidebar-overlay');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
 
-const TITLES = {
-  'dashboard-section': 'Admin Dashboard',
-  'patients-section': 'Patient Management',
-  'doctors-section': 'Doctor Management',
-  'appointments-section': 'Appointment Management'
+const viewTitles = {
+  dashboardView: 'Dashboard Overview',
+  patientsView: 'Patient Management',
+  doctorsView: 'Doctor Management',
+  appointmentsView: 'Appointment Scheduling',
+  timingView: 'Hospital Timing & Status'
 };
 
-function switchTab(targetId) {
-  navItems.forEach(btn => btn.classList.toggle('active', btn.dataset.target === targetId));
-  sections.forEach(sec => sec.classList.toggle('active', sec.id === targetId));
-  pageTitle.textContent = TITLES[targetId] || 'Dashboard';
+function switchView(targetId) {
+  navItems.forEach((btn) => btn.classList.toggle('active', btn.dataset.target === targetId));
+  viewSections.forEach((sec) => sec.classList.toggle('active', sec.id === targetId));
+  pageTitle.textContent = viewTitles[targetId] || 'Dashboard';
+  closeMobileSidebar();
+  refreshAllViews();
+}
 
-  // Close mobile sidebar
+navItems.forEach((btn) => {
+  btn.addEventListener('click', () => switchView(btn.dataset.target));
+});
+
+function closeMobileSidebar() {
   sidebar.classList.remove('open');
   sidebarOverlay.classList.remove('active');
 }
 
-navItems.forEach(btn => {
-  btn.addEventListener('click', () => switchTab(btn.dataset.target));
+document.getElementById('openSidebar').addEventListener('click', () => {
+  sidebar.classList.add('open');
+  sidebarOverlay.classList.add('active');
 });
+document.getElementById('closeSidebar').addEventListener('click', closeMobileSidebar);
+sidebarOverlay.addEventListener('click', closeMobileSidebar);
 
-document.getElementById('menu-toggle').addEventListener('click', () => {
-  sidebar.classList.toggle('open');
-  sidebarOverlay.classList.toggle('active');
-});
-
-sidebarOverlay.addEventListener('click', () => {
-  sidebar.classList.remove('open');
-  sidebarOverlay.classList.remove('active');
-});
-
-/* ==================== 6. LIVE CLOCK & HOSPITAL TIMING ==================== */
+/* ==================== LIVE CLOCK & HOSPITAL TIMING ==================== */
 function updateClockAndStatus() {
   const now = new Date();
-  
-  // Format Date
-  const dateOptions = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-  document.getElementById('live-date').textContent = now.toLocaleDateString('en-IN', dateOptions);
-  
-  // Format Time
-  document.getElementById('live-clock').textContent = now.toLocaleTimeString('en-IN');
+  const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const dateString = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-  // Hospital OPD Hours: 08:00 AM (8) to 08:00 PM (20)
-  const currentHour = now.getHours();
-  const isOpen = currentHour >= 8 && currentHour < 20;
+  document.getElementById('liveTime').textContent = timeString;
+  document.getElementById('liveDate').textContent = dateString;
+  document.getElementById('timingBigClock').textContent = timeString;
+  document.getElementById('timingBigDate').textContent = dateString;
 
-  const badge = document.getElementById('hospital-status-badge');
-  const statusText = document.getElementById('hospital-status-text');
-  const panelStatus = document.getElementById('panel-status-text');
+  const timing = JSON.parse(localStorage.getItem(STORAGE_KEYS.TIMING)) || { openTime: '08:00', closeTime: '21:00' };
+  const [openH, openM] = timing.openTime.split(':').map(Number);
+  const [closeH, closeM] = timing.closeTime.split(':').map(Number);
 
-  if (isOpen) {
-    badge.className = 'status-badge status-open';
-    statusText.textContent = 'HOSPITAL OPEN';
-    if (panelStatus) panelStatus.textContent = 'Open (OPD Active)';
-  } else {
-    badge.className = 'status-badge status-closed';
-    statusText.textContent = 'OPD CLOSED';
-    if (panelStatus) panelStatus.textContent = 'Closed (Emergency Only)';
-  }
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const openMinutes = openH * 60 + openM;
+  const closeMinutes = closeH * 60 + closeM;
+
+  const isOpen = currentMinutes >= openMinutes && currentMinutes < closeMinutes;
+
+  // Header status badge
+  const headerPill = document.getElementById('headerHospitalStatus');
+  const headerText = document.getElementById('headerStatusText');
+  headerPill.classList.toggle('closed', !isOpen);
+  headerText.textContent = isOpen ? 'Hospital Open' : 'Hospital Closed';
+
+  // Dashboard stat card
+  document.getElementById('statHospitalStatus').textContent = isOpen ? 'OPEN' : 'CLOSED';
+  document.getElementById('statHospitalHours').textContent = `${formatTime12Hour(timing.openTime)} – ${formatTime12Hour(timing.closeTime)}`;
+
+  // Timing page display
+  const bigBadge = document.getElementById('timingBigBadge');
+  bigBadge.textContent = isOpen ? 'OPEN NOW' : 'CLOSED NOW';
+  bigBadge.classList.toggle('closed', !isOpen);
+  document.getElementById('displayOpenTime').textContent = formatTime12Hour(timing.openTime);
+  document.getElementById('displayCloseTime').textContent = formatTime12Hour(timing.closeTime);
 }
 
-setInterval(updateClockAndStatus, 1000);
-updateClockAndStatus();
+document.getElementById('timingForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const openTime = document.getElementById('openTimeInput').value;
+  const closeTime = document.getElementById('closeTimeInput').value;
 
-/* ==================== 2. DASHBOARD OVERVIEW ==================== */
-function renderDashboard() {
-  document.getElementById('stat-patients').textContent = patients.length;
-  document.getElementById('stat-doctors').textContent = doctors.length;
-  document.getElementById('stat-appointments').textContent = appointments.length;
-
-  const availableDocs = doctors.filter(d => d.availability === 'Available').length;
-  document.getElementById('stat-available-doctors').textContent = `${availableDocs} Available now`;
-
-  const scheduledAppts = appointments.filter(a => a.status === 'Scheduled').length;
-  document.getElementById('stat-scheduled-appts').textContent = `${scheduledAppts} Scheduled`;
-
-  // Recent Appointments Table
-  const tbody = document.getElementById('recent-appointments-body');
-  const recent = [...appointments].slice(-5).reverse();
-
-  if (recent.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#64748b;">No appointments booked yet.</td></tr>';
+  if (openTime >= closeTime) {
+    showToast('Closing time must be later than opening time!', 'error');
     return;
   }
 
-  tbody.innerHTML = recent.map(appt => {
-    const patient = patients.find(p => p.id === appt.patientId);
-    const doctor = doctors.find(d => d.id === appt.doctorId);
-    const badgeClass = appt.status === 'Completed' ? 'badge-green' : appt.status === 'Cancelled' ? 'badge-danger' : 'badge-blue';
-    return `
-      <tr>
-        <td><strong>${patient ? patient.name : 'Unknown Patient'}</strong></td>
-        <td>${doctor ? doctor.name : 'Unknown Doctor'}</td>
-        <td>${appt.date} at ${appt.time}</td>
-        <td><span class="badge ${badgeClass}">${appt.status}</span></td>
-      </tr>
-    `;
-  }).join('');
-}
+  localStorage.setItem(STORAGE_KEYS.TIMING, JSON.stringify({ openTime, closeTime }));
+  updateClockAndStatus();
+  showToast('Hospital operating hours updated!', 'success');
+});
 
-/* ==================== 3. PATIENT MANAGEMENT ==================== */
-const patientForm = document.getElementById('patient-form');
-const patientSearch = document.getElementById('patient-search');
-const patientGenderFilter = document.getElementById('patient-gender-filter');
+/* ==================== PATIENT MANAGEMENT ==================== */
+const patientForm = document.getElementById('patientForm');
 
 patientForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  const id = document.getElementById('patient-id').value;
-  const name = document.getElementById('patient-name').value.trim();
-  const age = document.getElementById('patient-age').value.trim();
-  const gender = document.getElementById('patient-gender').value;
-  const blood = document.getElementById('patient-blood').value;
-  const phone = document.getElementById('patient-phone').value.trim();
-  const disease = document.getElementById('patient-disease').value.trim();
+  const idInput = document.getElementById('patientId').value;
+  const name = document.getElementById('patientName').value.trim();
+  const age = document.getElementById('patientAge').value;
+  const gender = document.getElementById('patientGender').value;
+  const blood = document.getElementById('patientBlood').value;
+  const phone = document.getElementById('patientPhone').value.trim();
+  const disease = document.getElementById('patientDisease').value.trim();
 
-  if (!name || !age || !gender || !blood || !phone || !disease) {
-    showToast('Please fill in all required patient fields.', 'error');
-    return;
-  }
+  let patients = getData(STORAGE_KEYS.PATIENTS);
 
-  if (!/^\d{10}$/.test(phone)) {
-    showToast('Please enter a valid 10-digit phone number.', 'error');
-    return;
-  }
-
-  if (id) {
-    // Update existing patient
-    const idx = patients.findIndex(p => p.id === id);
-    if (idx !== -1) {
-      patients[idx] = { id, name, age, gender, blood, phone, disease };
-      showToast('Patient details updated successfully!', 'success');
-    }
+  if (idInput) {
+    patients = patients.map((p) => (p.id === idInput ? { id: idInput, name, age, gender, blood, phone, disease } : p));
+    showToast('Patient record updated!', 'success');
   } else {
-    // Create new patient
-    const newId = 'P-' + (1000 + patients.length + Math.floor(Math.random() * 900));
-    patients.push({ id: newId, name, age, gender, blood, phone, disease });
-    showToast('New patient registered successfully!', 'success');
+    const newId = 'PT-' + Math.floor(1000 + Math.random() * 9000);
+    patients.unshift({ id: newId, name, age, gender, blood, phone, disease });
+    showToast('New patient registered!', 'success');
   }
 
-  saveData(STORAGE_KEYS.PATIENTS, patients);
+  setData(STORAGE_KEYS.PATIENTS, patients);
   resetPatientForm();
   refreshAllViews();
 });
 
-function resetPatientForm() {
-  patientForm.reset();
-  document.getElementById('patient-id').value = '';
-  document.getElementById('patient-form-title').textContent = 'Register New Patient';
-  document.getElementById('patient-submit-btn').textContent = 'Save Patient Record';
-  document.getElementById('cancel-patient-edit').classList.add('hidden');
-}
-
-document.getElementById('cancel-patient-edit').addEventListener('click', resetPatientForm);
-
 function renderPatients() {
-  const query = patientSearch.value.toLowerCase();
-  const genderVal = patientGenderFilter.value;
-  const tbody = document.getElementById('patients-table-body');
+  const patients = getData(STORAGE_KEYS.PATIENTS);
+  const query = document.getElementById('patientSearch').value.toLowerCase();
+  const genderFilter = document.getElementById('patientGenderFilter').value;
 
-  const filtered = patients.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(query) || p.id.toLowerCase().includes(query) || p.disease.toLowerCase().includes(query);
-    const matchesGender = genderVal === 'All' || p.gender === genderVal;
-    return matchesSearch && matchesGender;
+  const filtered = patients.filter((p) => {
+    const matchesQuery =
+      p.name.toLowerCase().includes(query) ||
+      p.phone.includes(query) ||
+      p.disease.toLowerCase().includes(query) ||
+      p.id.toLowerCase().includes(query);
+    const matchesGender = genderFilter === 'All' || p.gender === genderFilter;
+    return matchesQuery && matchesGender;
   });
 
-  if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#64748b;">No matching patient records found.</td></tr>';
+  const tbody = document.getElementById('patientsTableBody');
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#64748b;">No patient records found.</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = filtered.map(p => `
+  tbody.innerHTML = filtered
+    .map(
+      (p) => `
     <tr>
       <td><strong>${p.id}</strong></td>
       <td>${p.name}</td>
       <td>${p.age} yrs / ${p.gender}</td>
-      <td><span class="badge badge-danger">${p.blood}</span></td>
+      <td><span class="badge badge-blue">${p.blood}</span></td>
       <td>${p.phone}</td>
       <td>${p.disease}</td>
-      <td class="table-actions">
-        <button class="icon-btn btn-view" onclick="viewPatient('${p.id}')">View</button>
-        <button class="icon-btn btn-edit" onclick="editPatient('${p.id}')">Edit</button>
-        <button class="icon-btn btn-del" onclick="deletePatient('${p.id}')">Delete</button>
+      <td>
+        <div class="action-btns">
+          <button class="action-btn view" title="View Details" onclick="viewPatient('${p.id}')"><i class="fa-solid fa-eye"></i></button>
+          <button class="action-btn edit" title="Edit" onclick="editPatient('${p.id}')"><i class="fa-solid fa-pen"></i></button>
+          <button class="action-btn delete" title="Delete" onclick="deletePatient('${p.id}')"><i class="fa-solid fa-trash"></i></button>
+        </div>
       </td>
-    </tr>
-  `).join('');
+    </tr>`
+    )
+    .join('');
 }
 
-window.viewPatient = function(id) {
-  const p = patients.find(item => item.id === id);
+window.viewPatient = (id) => {
+  const p = getData(STORAGE_KEYS.PATIENTS).find((item) => item.id === id);
   if (!p) return;
-  const modalBody = document.getElementById('modal-body');
-  modalBody.innerHTML = `
+  document.getElementById('patientModalBody').innerHTML = `
     <p><span>Patient ID:</span> <strong>${p.id}</strong></p>
     <p><span>Full Name:</span> <strong>${p.name}</strong></p>
-    <p><span>Age / Gender:</span> <strong>${p.age} Years / ${p.gender}</strong></p>
+    <p><span>Age &amp; Gender:</span> <strong>${p.age} Years (${p.gender})</strong></p>
     <p><span>Blood Group:</span> <strong>${p.blood}</strong></p>
     <p><span>Contact Number:</span> <strong>${p.phone}</strong></p>
-    <p><span>Primary Condition:</span> <strong>${p.disease}</strong></p>
+    <p><span>Diagnosis / Notes:</span> <strong>${p.disease}</strong></p>
   `;
-  document.getElementById('patient-modal').classList.remove('hidden');
+  document.getElementById('patientModal').classList.remove('hidden');
 };
 
-document.getElementById('close-modal-btn').addEventListener('click', () => {
-  document.getElementById('patient-modal').classList.add('hidden');
-});
+window.closeModal = () => document.getElementById('patientModal').classList.add('hidden');
 
-window.editPatient = function(id) {
-  const p = patients.find(item => item.id === id);
+window.editPatient = (id) => {
+  const p = getData(STORAGE_KEYS.PATIENTS).find((item) => item.id === id);
   if (!p) return;
-  document.getElementById('patient-id').value = p.id;
-  document.getElementById('patient-name').value = p.name;
-  document.getElementById('patient-age').value = p.age;
-  document.getElementById('patient-gender').value = p.gender;
-  document.getElementById('patient-blood').value = p.blood;
-  document.getElementById('patient-phone').value = p.phone;
-  document.getElementById('patient-disease').value = p.disease;
+  document.getElementById('patientId').value = p.id;
+  document.getElementById('patientName').value = p.name;
+  document.getElementById('patientAge').value = p.age;
+  document.getElementById('patientGender').value = p.gender;
+  document.getElementById('patientBlood').value = p.blood;
+  document.getElementById('patientPhone').value = p.phone;
+  document.getElementById('patientDisease').value = p.disease;
 
-  document.getElementById('patient-form-title').textContent = `Edit Patient (${p.id})`;
-  document.getElementById('patient-submit-btn').textContent = 'Update Patient';
-  document.getElementById('cancel-patient-edit').classList.remove('hidden');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.getElementById('patientFormTitle').innerHTML = `<i class="fa-solid fa-user-pen"></i> Edit Patient (${p.id})`;
+  document.getElementById('cancelPatientEdit').classList.remove('hidden');
 };
 
-window.deletePatient = function(id) {
-  if (!confirm('Are you sure you want to delete this patient record?')) return;
-  patients = patients.filter(p => p.id !== id);
-  saveData(STORAGE_KEYS.PATIENTS, patients);
-  showToast('Patient record deleted.', 'info');
+window.deletePatient = (id) => {
+  if (!confirm('Delete this patient record permanently?')) return;
+  const updated = getData(STORAGE_KEYS.PATIENTS).filter((p) => p.id !== id);
+  setData(STORAGE_KEYS.PATIENTS, updated);
+  showToast('Patient record deleted.', 'error');
   refreshAllViews();
 };
 
-patientSearch.addEventListener('input', renderPatients);
-patientGenderFilter.addEventListener('change', renderPatients);
+function resetPatientForm() {
+  patientForm.reset();
+  document.getElementById('patientId').value = '';
+  document.getElementById('patientFormTitle').innerHTML = `<i class="fa-solid fa-user-plus"></i> Register New Patient`;
+  document.getElementById('cancelPatientEdit').classList.add('hidden');
+}
 
-/* ==================== 4. DOCTOR MANAGEMENT ==================== */
-const doctorForm = document.getElementById('doctor-form');
-const doctorSearch = document.getElementById('doctor-search');
-const doctorStatusFilter = document.getElementById('doctor-status-filter');
+document.getElementById('cancelPatientEdit').addEventListener('click', resetPatientForm);
+document.getElementById('patientSearch').addEventListener('input', renderPatients);
+document.getElementById('patientGenderFilter').addEventListener('change', renderPatients);
+
+/* ==================== DOCTOR MANAGEMENT ==================== */
+const doctorForm = document.getElementById('doctorForm');
 
 doctorForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  const id = document.getElementById('doctor-id').value;
-  const name = document.getElementById('doctor-name').value.trim();
-  const specialization = document.getElementById('doctor-specialization').value;
-  const phone = document.getElementById('doctor-phone').value.trim();
-  const availability = document.getElementById('doctor-availability').value;
+  const idInput = document.getElementById('doctorId').value;
+  const name = document.getElementById('doctorName').value.trim();
+  const specialization = document.getElementById('doctorSpec').value;
+  const phone = document.getElementById('doctorPhone').value.trim();
+  const availability = document.getElementById('doctorAvailability').value;
 
-  if (!name || !specialization || !phone) {
-    showToast('Please fill in all required doctor fields.', 'error');
-    return;
-  }
+  let doctors = getData(STORAGE_KEYS.DOCTORS);
 
-  if (id) {
-    const idx = doctors.findIndex(d => d.id === id);
-    if (idx !== -1) {
-      doctors[idx] = { id, name, specialization, phone, availability };
-      showToast('Doctor details updated!', 'success');
-    }
+  if (idInput) {
+    doctors = doctors.map((d) => (d.id === idInput ? { id: idInput, name, specialization, phone, availability } : d));
+    showToast('Doctor details updated!', 'success');
   } else {
-    const newId = 'D-' + (200 + doctors.length + Math.floor(Math.random() * 90));
-    doctors.push({ id: newId, name, specialization, phone, availability });
-    showToast('New doctor added to directory!', 'success');
+    const newId = 'DR-' + Math.floor(100 + Math.random() * 900);
+    doctors.unshift({ id: newId, name, specialization, phone, availability });
+    showToast('New doctor added!', 'success');
   }
 
-  saveData(STORAGE_KEYS.DOCTORS, doctors);
+  setData(STORAGE_KEYS.DOCTORS, doctors);
   resetDoctorForm();
   refreshAllViews();
 });
 
-function resetDoctorForm() {
-  doctorForm.reset();
-  document.getElementById('doctor-id').value = '';
-  document.getElementById('doctor-form-title').textContent = 'Add New Doctor';
-  document.getElementById('doctor-submit-btn').textContent = 'Save Doctor';
-  document.getElementById('cancel-doctor-edit').classList.add('hidden');
-}
-
-document.getElementById('cancel-doctor-edit').addEventListener('click', resetDoctorForm);
-
 function renderDoctors() {
-  const query = doctorSearch.value.toLowerCase();
-  const statusVal = doctorStatusFilter.value;
-  const tbody = document.getElementById('doctors-table-body');
+  const doctors = getData(STORAGE_KEYS.DOCTORS);
+  const query = document.getElementById('doctorSearch').value.toLowerCase();
+  const statusFilter = document.getElementById('doctorStatusFilter').value;
 
-  const filtered = doctors.filter(d => {
-    const matchesSearch = d.name.toLowerCase().includes(query) || d.specialization.toLowerCase().includes(query);
-    const matchesStatus = statusVal === 'All' || d.availability === statusVal;
-    return matchesSearch && matchesStatus;
+  const filtered = doctors.filter((d) => {
+    const matchesQuery = d.name.toLowerCase().includes(query) || d.specialization.toLowerCase().includes(query);
+    const matchesStatus = statusFilter === 'All' || d.availability === statusFilter;
+    return matchesQuery && matchesStatus;
   });
 
-  if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#64748b;">No matching doctors found.</td></tr>';
+  const tbody = document.getElementById('doctorsTableBody');
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#64748b;">No doctors found.</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = filtered.map(d => {
-    const badgeClass = d.availability === 'Available' ? 'badge-green' : d.availability === 'In Surgery' ? 'badge-warning' : 'badge-danger';
-    return `
+  tbody.innerHTML = filtered
+    .map((d) => {
+      const badgeClass = d.availability === 'Available' ? 'badge-green' : d.availability === 'In Surgery' ? 'badge-amber' : 'badge-red';
+      return `
       <tr>
-        <td><strong>${d.id}</strong></td>
-        <td>${d.name}</td>
+        <td><strong>${d.name}</strong><br><small style="color:#64748b">${d.id}</small></td>
         <td>${d.specialization}</td>
         <td>${d.phone}</td>
         <td><span class="badge ${badgeClass}">${d.availability}</span></td>
-        <td class="table-actions">
-          <button class="icon-btn btn-edit" onclick="editDoctor('${d.id}')">Edit</button>
-          <button class="icon-btn btn-del" onclick="deleteDoctor('${d.id}')">Delete</button>
+        <td>
+          <div class="action-btns">
+            <button class="action-btn edit" title="Edit" onclick="editDoctor('${d.id}')"><i class="fa-solid fa-pen"></i></button>
+            <button class="action-btn delete" title="Delete" onclick="deleteDoctor('${d.id}')"><i class="fa-solid fa-trash"></i></button>
+          </div>
         </td>
-      </tr>
-    `;
-  }).join('');
+      </tr>`;
+    })
+    .join('');
 }
 
-window.editDoctor = function(id) {
-  const d = doctors.find(item => item.id === id);
+window.editDoctor = (id) => {
+  const d = getData(STORAGE_KEYS.DOCTORS).find((item) => item.id === id);
   if (!d) return;
-  document.getElementById('doctor-id').value = d.id;
-  document.getElementById('doctor-name').value = d.name;
-  document.getElementById('doctor-specialization').value = d.specialization;
-  document.getElementById('doctor-phone').value = d.phone;
-  document.getElementById('doctor-availability').value = d.availability;
+  document.getElementById('doctorId').value = d.id;
+  document.getElementById('doctorName').value = d.name;
+  document.getElementById('doctorSpec').value = d.specialization;
+  document.getElementById('doctorPhone').value = d.phone;
+  document.getElementById('doctorAvailability').value = d.availability;
 
-  document.getElementById('doctor-form-title').textContent = `Edit Doctor (${d.id})`;
-  document.getElementById('doctor-submit-btn').textContent = 'Update Doctor';
-  document.getElementById('cancel-doctor-edit').classList.remove('hidden');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.getElementById('doctorFormTitle').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Edit Doctor (${d.id})`;
+  document.getElementById('cancelDoctorEdit').classList.remove('hidden');
 };
 
-window.deleteDoctor = function(id) {
+window.deleteDoctor = (id) => {
   if (!confirm('Remove this doctor from the system?')) return;
-  doctors = doctors.filter(d => d.id !== id);
-  saveData(STORAGE_KEYS.DOCTORS, doctors);
-  showToast('Doctor removed.', 'info');
+  const updated = getData(STORAGE_KEYS.DOCTORS).filter((d) => d.id !== id);
+  setData(STORAGE_KEYS.DOCTORS, updated);
+  showToast('Doctor removed.', 'error');
   refreshAllViews();
 };
 
-doctorSearch.addEventListener('input', renderDoctors);
-doctorStatusFilter.addEventListener('change', renderDoctors);
+function resetDoctorForm() {
+  doctorForm.reset();
+  document.getElementById('doctorId').value = '';
+  document.getElementById('doctorFormTitle').innerHTML = `<i class="fa-solid fa-user-doctor"></i> Add New Doctor`;
+  document.getElementById('cancelDoctorEdit').classList.add('hidden');
+}
 
-/* ==================== 5. APPOINTMENT MANAGEMENT ==================== */
-const appointmentForm = document.getElementById('appointment-form');
-const appointmentSearch = document.getElementById('appointment-search');
-const appointmentStatusFilter = document.getElementById('appointment-status-filter');
+document.getElementById('cancelDoctorEdit').addEventListener('click', resetDoctorForm);
+document.getElementById('doctorSearch').addEventListener('input', renderDoctors);
+document.getElementById('doctorStatusFilter').addEventListener('change', renderDoctors);
+
+/* ==================== APPOINTMENT MANAGEMENT ==================== */
+const appointmentForm = document.getElementById('appointmentForm');
 
 function populateAppointmentDropdowns() {
-  const patientSelect = document.getElementById('appt-patient');
-  const doctorSelect = document.getElementById('appt-doctor');
+  const patients = getData(STORAGE_KEYS.PATIENTS);
+  const doctors = getData(STORAGE_KEYS.DOCTORS);
 
-  patientSelect.innerHTML = '<option value="">-- Select Patient --</option>' +
-    patients.map(p => `<option value="${p.id}">${p.name} (${p.id})</option>`).join('');
+  const patientSelect = document.getElementById('apptPatient');
+  const doctorSelect = document.getElementById('apptDoctor');
 
-  doctorSelect.innerHTML = '<option value="">-- Select Doctor --</option>' +
-    doctors.map(d => `<option value="${d.id}">${d.name} - ${d.specialization} [${d.availability}]</option>`).join('');
+  patientSelect.innerHTML =
+    `<option value="">-- Choose Patient --</option>` +
+    patients.map((p) => `<option value="${p.id}">${p.name} (${p.id})</option>`).join('');
+
+  doctorSelect.innerHTML =
+    `<option value="">-- Choose Doctor --</option>` +
+    doctors.map((d) => `<option value="${d.id}">${d.name} - ${d.specialization} [${d.availability}]</option>`).join('');
 }
 
 appointmentForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  const id = document.getElementById('appointment-id').value;
-  const patientId = document.getElementById('appt-patient').value;
-  const doctorId = document.getElementById('appt-doctor').value;
-  const date = document.getElementById('appt-date').value;
-  const time = document.getElementById('appt-time').value;
-  const status = document.getElementById('appt-status').value;
-  const notes = document.getElementById('appt-notes').value.trim() || 'General Consultation';
+  const idInput = document.getElementById('appointmentId').value;
+  const patientId = document.getElementById('apptPatient').value;
+  const doctorId = document.getElementById('apptDoctor').value;
+  const date = document.getElementById('apptDate').value;
+  const time = document.getElementById('apptTime').value;
+  const status = document.getElementById('apptStatus').value;
+  const notes = document.getElementById('apptNotes').value.trim();
 
-  if (!patientId || !doctorId || !date || !time) {
-    showToast('Please select patient, doctor, date, and time.', 'error');
+  const patient = getData(STORAGE_KEYS.PATIENTS).find((p) => p.id === patientId);
+  const doctor = getData(STORAGE_KEYS.DOCTORS).find((d) => d.id === doctorId);
+
+  if (!patient || !doctor) {
+    showToast('Please select valid patient and doctor!', 'error');
     return;
   }
 
-  if (id) {
-    const idx = appointments.findIndex(a => a.id === id);
-    if (idx !== -1) {
-      appointments[idx] = { id, patientId, doctorId, date, time, status, notes };
-      showToast('Appointment updated successfully!', 'success');
-    }
+  let appointments = getData(STORAGE_KEYS.APPOINTMENTS);
+  const payload = {
+    id: idInput || 'AP-' + Math.floor(100 + Math.random() * 900),
+    patientId,
+    patientName: patient.name,
+    doctorId,
+    doctorName: doctor.name,
+    date,
+    time,
+    status,
+    notes
+  };
+
+  if (idInput) {
+    appointments = appointments.map((a) => (a.id === idInput ? payload : a));
+    showToast('Appointment updated!', 'success');
   } else {
-    const newId = 'APT-' + (300 + appointments.length + Math.floor(Math.random() * 90));
-    appointments.push({ id: newId, patientId, doctorId, date, time, status, notes });
+    appointments.unshift(payload);
     showToast('Appointment booked successfully!', 'success');
   }
 
-  saveData(STORAGE_KEYS.APPOINTMENTS, appointments);
+  setData(STORAGE_KEYS.APPOINTMENTS, appointments);
   resetAppointmentForm();
   refreshAllViews();
 });
 
-function resetAppointmentForm() {
-  appointmentForm.reset();
-  document.getElementById('appointment-id').value = '';
-  document.getElementById('appointment-form-title').textContent = 'Book New Appointment';
-  document.getElementById('appointment-submit-btn').textContent = 'Confirm Appointment';
-  document.getElementById('cancel-appointment-edit').classList.add('hidden');
-}
-
-document.getElementById('cancel-appointment-edit').addEventListener('click', resetAppointmentForm);
-
 function renderAppointments() {
-  const query = appointmentSearch.value.toLowerCase();
-  const statusVal = appointmentStatusFilter.value;
-  const tbody = document.getElementById('appointments-table-body');
+  const appointments = getData(STORAGE_KEYS.APPOINTMENTS);
+  const query = document.getElementById('apptSearch').value.toLowerCase();
+  const statusFilter = document.getElementById('apptStatusFilter').value;
 
-  const filtered = appointments.filter(a => {
-    const patient = patients.find(p => p.id === a.patientId);
-    const doctor = doctors.find(d => d.id === a.doctorId);
-    const pName = patient ? patient.name.toLowerCase() : '';
-    const dName = doctor ? doctor.name.toLowerCase() : '';
-
-    const matchesSearch = pName.includes(query) || dName.includes(query) || a.id.toLowerCase().includes(query);
-    const matchesStatus = statusVal === 'All' || a.status === statusVal;
-    return matchesSearch && matchesStatus;
+  const filtered = appointments.filter((a) => {
+    const matchesQuery = a.patientName.toLowerCase().includes(query) || a.doctorName.toLowerCase().includes(query);
+    const matchesStatus = statusFilter === 'All' || a.status === statusFilter;
+    return matchesQuery && matchesStatus;
   });
 
-  if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#64748b;">No appointments found.</td></tr>';
+  const tbody = document.getElementById('appointmentsTableBody');
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#64748b;">No appointments found.</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = filtered.map(a => {
-    const patient = patients.find(p => p.id === a.patientId);
-    const doctor = doctors.find(d => d.id === a.doctorId);
-    const badgeClass = a.status === 'Completed' ? 'badge-green' : a.status === 'Cancelled' ? 'badge-danger' : 'badge-blue';
-
-    return `
+  tbody.innerHTML = filtered
+    .map((a) => {
+      const badgeClass = a.status === 'Scheduled' ? 'badge-blue' : a.status === 'Completed' ? 'badge-green' : 'badge-red';
+      return `
       <tr>
-        <td><strong>${a.id}</strong></td>
-        <td>${patient ? patient.name : 'Removed Patient'}</td>
-        <td>${doctor ? doctor.name : 'Removed Doctor'}</td>
-        <td>${a.date} | <strong>${a.time}</strong></td>
-        <td>${a.notes}</td>
+        <td><strong>${a.patientName}</strong></td>
+        <td>${a.doctorName}</td>
+        <td>${a.date}</td>
+        <td>${formatTime12Hour(a.time)}</td>
         <td><span class="badge ${badgeClass}">${a.status}</span></td>
-        <td class="table-actions">
-          <button class="icon-btn btn-edit" onclick="editAppointment('${a.id}')">Edit</button>
-          ${a.status !== 'Cancelled' ? `<button class="icon-btn btn-del" onclick="cancelAppointment('${a.id}')">Cancel</button>` : ''}
+        <td>
+          <div class="action-btns">
+            <button class="action-btn edit" title="Edit Appointment" onclick="editAppointment('${a.id}')"><i class="fa-solid fa-pen"></i></button>
+            <button class="action-btn delete" title="Cancel Appointment" onclick="cancelAppointment('${a.id}')"><i class="fa-solid fa-ban"></i></button>
+          </div>
         </td>
-      </tr>
-    `;
-  }).join('');
+      </tr>`;
+    })
+    .join('');
 }
 
-window.editAppointment = function(id) {
-  const a = appointments.find(item => item.id === id);
+window.editAppointment = (id) => {
+  const a = getData(STORAGE_KEYS.APPOINTMENTS).find((item) => item.id === id);
   if (!a) return;
-  document.getElementById('appointment-id').value = a.id;
-  document.getElementById('appt-patient').value = a.patientId;
-  document.getElementById('appt-doctor').value = a.doctorId;
-  document.getElementById('appt-date').value = a.date;
-  document.getElementById('appt-time').value = a.time;
-  document.getElementById('appt-status').value = a.status;
-  document.getElementById('appt-notes').value = a.notes;
+  document.getElementById('appointmentId').value = a.id;
+  document.getElementById('apptPatient').value = a.patientId;
+  document.getElementById('apptDoctor').value = a.doctorId;
+  document.getElementById('apptDate').value = a.date;
+  document.getElementById('apptTime').value = a.time;
+  document.getElementById('apptStatus').value = a.status;
+  document.getElementById('apptNotes').value = a.notes || '';
 
-  document.getElementById('appointment-form-title').textContent = `Edit Appointment (${a.id})`;
-  document.getElementById('appointment-submit-btn').textContent = 'Update Appointment';
-  document.getElementById('cancel-appointment-edit').classList.remove('hidden');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.getElementById('appointmentFormTitle').innerHTML = `<i class="fa-solid fa-calendar-pen"></i> Edit Appointment (${a.id})`;
+  document.getElementById('cancelApptEdit').classList.remove('hidden');
 };
 
-window.cancelAppointment = function(id) {
-  if (!confirm('Cancel this appointment?')) return;
-  const idx = appointments.findIndex(a => a.id === id);
-  if (idx !== -1) {
-    appointments[idx].status = 'Cancelled';
-    saveData(STORAGE_KEYS.APPOINTMENTS, appointments);
-    showToast('Appointment marked as Cancelled.', 'info');
-    refreshAllViews();
-  }
+window.cancelAppointment = (id) => {
+  if (!confirm('Mark this appointment as Cancelled?')) return;
+  const updated = getData(STORAGE_KEYS.APPOINTMENTS).map((a) =>
+    a.id === id ? { ...a, status: 'Cancelled' } : a
+  );
+  setData(STORAGE_KEYS.APPOINTMENTS, updated);
+  showToast('Appointment cancelled.', 'error');
+  refreshAllViews();
 };
 
-appointmentSearch.addEventListener('input', renderAppointments);
-appointmentStatusFilter.addEventListener('change', renderAppointments);
+function resetAppointmentForm() {
+  appointmentForm.reset();
+  document.getElementById('appointmentId').value = '';
+  document.getElementById('appointmentFormTitle').innerHTML = `<i class="fa-solid fa-calendar-plus"></i> Book Appointment`;
+  document.getElementById('cancelApptEdit').classList.add('hidden');
+}
 
-/* ==================== INITIALIZE APPLICATION ==================== */
+document.getElementById('cancelApptEdit').addEventListener('click', resetAppointmentForm);
+document.getElementById('apptSearch').addEventListener('input', renderAppointments);
+document.getElementById('apptStatusFilter').addEventListener('change', renderAppointments);
+
+/* ==================== DASHBOARD OVERVIEW REFRESH ==================== */
+function renderDashboard() {
+  const patients = getData(STORAGE_KEYS.PATIENTS);
+  const doctors = getData(STORAGE_KEYS.DOCTORS);
+  const appointments = getData(STORAGE_KEYS.APPOINTMENTS);
+
+  document.getElementById('statPatients').textContent = patients.length;
+  document.getElementById('statDoctors').textContent = doctors.length;
+  const availDocs = doctors.filter((d) => d.availability === 'Available').length;
+  document.getElementById('statAvailableDoctors').textContent = `${availDocs} Available today`;
+
+  document.getElementById('statAppointments').textContent = appointments.length;
+  const scheduledCount = appointments.filter((a) => a.status === 'Scheduled').length;
+  document.getElementById('statScheduledAppts').textContent = `${scheduledCount} Scheduled`;
+
+  // Recent Appointments Table
+  const recentBody = document.getElementById('recentAppointmentsBody');
+  const recent = appointments.slice(0, 5);
+  recentBody.innerHTML = recent.length
+    ? recent
+        .map((a) => {
+          const badge = a.status === 'Scheduled' ? 'badge-blue' : a.status === 'Completed' ? 'badge-green' : 'badge-red';
+          return `
+          <tr>
+            <td><strong>${a.patientName}</strong></td>
+            <td>${a.doctorName}</td>
+            <td>${a.date} • ${formatTime12Hour(a.time)}</td>
+            <td><span class="badge ${badge}">${a.status}</span></td>
+          </tr>`;
+        })
+        .join('')
+    : `<tr><td colspan="4" style="text-align:center;color:#64748b;">No appointments scheduled yet.</td></tr>`;
+
+  // Doctors On Duty List
+  const docList = document.getElementById('dashboardDoctorsList');
+  docList.innerHTML = doctors.length
+    ? doctors
+        .slice(0, 5)
+        .map((d) => {
+          const badge = d.availability === 'Available' ? 'badge-green' : d.availability === 'In Surgery' ? 'badge-amber' : 'badge-red';
+          return `
+          <div class="doctor-mini-item">
+            <div>
+              <strong>${d.name}</strong>
+              <small>${d.specialization}</small>
+            </div>
+            <span class="badge ${badge}">${d.availability}</span>
+          </div>`;
+        })
+        .join('')
+    : `<p style="color:#64748b;font-size:0.9rem;">No doctors registered.</p>`;
+}
+
 function refreshAllViews() {
   renderDashboard();
   renderPatients();
   renderDoctors();
   populateAppointmentDropdowns();
   renderAppointments();
+  updateClockAndStatus();
 }
 
-// Start App
-checkAuth();
+/* ==================== BOOTSTRAP APPLICATION ==================== */
+document.addEventListener('DOMContentLoaded', () => {
+  initializeDefaultData();
+
+  const timing = JSON.parse(localStorage.getItem(STORAGE_KEYS.TIMING));
+  if (timing) {
+    document.getElementById('openTimeInput').value = timing.openTime;
+    document.getElementById('closeTimeInput').value = timing.closeTime;
+  }
+
+  updateClockAndStatus();
+  setInterval(updateClockAndStatus, 1000);
+
+  const activeSession = JSON.parse(localStorage.getItem(STORAGE_KEYS.SESSION));
+  if (activeSession) {
+    loadApp(activeSession);
+  }
+});
